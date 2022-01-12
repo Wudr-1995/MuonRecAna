@@ -1,4 +1,4 @@
-#include "EleCalibAna.h"
+#include "MuonRecAna.h"
 #include "TCanvas.h"
 
 int FormatGraph(TGraph* g) {
@@ -24,92 +24,24 @@ int FormatHist(TH1* h) {
 }
 
 int main(int argc, char** argv) {
-	if (argc != 7) {
+	if (argc != 6) {
 		cout << "Wrong number of input arguments" << endl;
 		return 0;
 	}
 
-	TString ef(argv[1]);
-	TString cf(argv[2]);
-	TString of(argv[3]);
+	TString sf(argv[1]);
+	TString wf(argv[2]);
+	TString lf(argv[3]);
+	TString spmtf(argv[4]);
+	TString of(argv[5]);
 
-	int rl, rh;
-	sscanf(argv[4], "%d", &rl);
-	sscanf(argv[5], "%d", &rh);
-
-	TString wf(argv[6]);
-
-	EleCalibAna* pro = new EleCalibAna(ef, cf, rl, rh, wf);
-
-	if (!pro->DumpElecTruth()) {
-		cout << "DumpElecTruth: Input error." << endl;
-		return 0;
-	}
-	if (!pro->DumpCalib()) {
-		cout << "DumpCalib: Input error." << endl;
-		return 0;
-	}
-	if (!pro->DumpElecWave()) {
-		cout << "DumpWave: Input error." << endl;
-		return 0;
-	}
-
-	TGraph* PEs = pro->DrawPE();
-	TGraph* Ts = pro->DrawT();
-	TH1F* DPEs = pro->DrawDPE();
-	TH1F* DTs = pro->DrawDT();
-	// TH1F* wave = pro->DrawWave();
-	double dnPE = pro->getDiffnPE();
-	cout << "Difference of nPE: " << dnPE << endl;
-
-	auto c = new TCanvas();
-	c->SetRightMargin(0.1);
-	c->SetLeftMargin(0.2);
-	c->SetTopMargin(0.1);
-	c->SetBottomMargin(0.2);
-	c->Print(of + "[");
-
-	c->cd();
-	FormatGraph(PEs);
-	PEs->SetTitle("");
-	PEs->GetXaxis()->SetTitle("True nPE");
-	PEs->GetYaxis()->SetTitle("Rec nPE");
-	PEs->GetYaxis()->SetRangeUser(0, 15000);
-	PEs->Draw("AP");
-	c->Print(of);
-
-	c->cd();
-	FormatGraph(Ts);
-	Ts->SetTitle("");
-	Ts->GetXaxis()->SetTitle("True hit time / ns");
-	Ts->GetYaxis()->SetTitle("Rec hit time / ns");
-	Ts->Draw("AP");
-	c->Print(of);
-
-	c->cd();
-	c->SetLogy();
-	FormatHist(DPEs);
-	DPEs->GetXaxis()->SetRangeUser(-5000, 750);
-	DPEs->GetXaxis()->SetTitle("#Delta nPE (Truth - Rec.)");
-	DPEs->Draw();
-	c->Print(of);
-
-	c->cd();
-	FormatHist(DTs);
-	DTs->GetXaxis()->SetRangeUser(-500, 500);
-	DTs->GetXaxis()->SetTitle("#Delta Hit time (Truth - Rec.)");
-	DTs->Draw();
-	c->Print(of);
-
-	// c->cd();
-	// gStyle->SetOptStat(0000);
-	// FormatHist(wave);
-	// wave->GetXaxis()->SetTitle("Time / ns");
-	// wave->GetYaxis()->SetTitle("Amplitude / (adc unit)");
-	// wave->Draw();
-	// c->Print(of);
-
-	c->Print(of +"]");
+	MuonRecAna* recTool = new MuonRecAna(sf, wf, lf, spmtf, of);
+	clog << "Fitting......" << endl;
+	recTool->Fit();
+	clog << "Analysising......" << endl;
+	recTool->Analysis();
+	clog << "Dumping......" << endl;
+	recTool->DumpResult();
 
 	return 1;
 }
